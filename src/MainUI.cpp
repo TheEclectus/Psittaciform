@@ -20,8 +20,16 @@ void MainUI()
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
 	ImGui::Begin("MainWindow", nullptr, MainWindowFlags);
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-		ImGui::InputTextMultiline("", &Buffer, ImVec2(0,0), ImGuiInputTextFlags_ReadOnly);
+		ImGui::BeginChild(ImGui::GetID("LuaTerm"), ImVec2(ImGui::GetContentRegionAvail().x * 0.7f, 0));
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+			ImGui::InputTextMultiline("", &Buffer, ImVec2(0, 0), ImGuiInputTextFlags_None);
+		ImGui::EndChild();
+
+		ImGui::SameLine();
+
+		ImGui::BeginChild(ImGui::GetID("Toolbar"));
+			ImGui::Text("Well, here's to us.");
+		ImGui::EndChild();
 	ImGui::End();
 	ImGui::PopStyleVar();
 }
