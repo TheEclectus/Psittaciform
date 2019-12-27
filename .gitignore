@@ -338,3 +338,9 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# VS project files
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
