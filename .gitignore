@@ -346,3 +346,4 @@ healthchecksdb
 *.vcxproj.user
 /ext/SDL2/include
 /ext/SDL2
+/license

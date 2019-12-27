@@ -1,3 +1,4 @@
+print("Making dirs")
 -- Create /ext directories
 os.mkdir("./ext")
 os.mkdir("./ext/SDL2")
