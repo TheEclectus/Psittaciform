@@ -344,3 +344,5 @@ healthchecksdb
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+/ext/SDL2/include
+/ext/SDL2
