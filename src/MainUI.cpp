@@ -95,6 +95,15 @@ void MainUI()
 					ImGui::Checkbox("Detail View", &DetailView);
 					//ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 8,0 });
 					ImGui::BeginChild(ImGui::GetID("ScriptsTabContent"), ImVec2(0, 0), true);
+						if (ImGui::BeginPopupContextWindow("ToolbarMenu"))
+						{
+							if (ImGui::MenuItem("New Script"))
+							{
+
+							}
+							ImGui::EndPopup();
+						}
+
 						// One of these for each loaded script
 						for (auto &CurScript : Scripts)
 						{

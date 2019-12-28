@@ -11,7 +11,7 @@
 
 #include "MainUI.h"
 
-#define winmsg (WM_USER + 0x100)
+#define winmsg (WM_APP + 1)
 
 void MakeTaskbarIcon(SDL_Window *window)
 {
@@ -66,12 +66,13 @@ int main(int, char**)
     SDL_SetWindowsMessageHook([](void* userdata, void* hWnd, unsigned int message, Uint64 wParam, Sint64 lParam) {
         if (message == winmsg)
         {
+			
             if (lParam == WM_LBUTTONDBLCLK)
             {
-                int s = 3;
+				SDL_ShowWindow((SDL_Window*)userdata);
             }
         }
-    }, nullptr);
+    }, window);
 
     MakeTaskbarIcon(window);
 
