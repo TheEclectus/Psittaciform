@@ -96,9 +96,6 @@ project "Psittaciform"
 	}
 	
 	filter "system:windows"
-		defines {
-			"TRAY_WINAPI",
-		}
 	
 	filter "action:vs*"
 		defines {
