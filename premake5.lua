@@ -95,6 +95,11 @@ project "Psittaciform"
 		_OPTIONS["sdl2_include"],
 	}
 	
+	filter "system:windows"
+		defines {
+			"TRAY_WINAPI",
+		}
+	
 	filter "action:vs*"
 		defines {
 			"WINDOWS_IGNORE_PACKING_MISMATCH",

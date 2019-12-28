@@ -11,28 +11,27 @@
 
 #include "MainUI.h"
 
-#define winmsg (WM_APP + 1)
-
-void MakeTaskbarIcon(SDL_Window *window)
+#define winmsg (WM_USER + 1)
+void TrayIcon(SDL_Window *Window, bool bAdd)
 {
-    SDL_SysWMinfo info;
-    SDL_VERSION(&info.version);
+	SDL_SysWMinfo info;
+	SDL_VERSION(&info.version);
 
-    NOTIFYICONDATA icon;
-    if (SDL_GetWindowWMInfo(window, &info))
-    {
-        icon.uCallbackMessage = winmsg;
-        icon.dwInfoFlags = NIIF_INFO;
-        icon.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
-        icon.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-        icon.cbSize = NOTIFYICONDATA_V2_SIZE;
-        icon.hWnd = info.info.win.window;
-        icon.uVersion = NOTIFYICON_VERSION_4;
-        icon.uID = 8008;
-        lstrcpyW(icon.szTip, L"Test tip");
+	NOTIFYICONDATA icon;
+	if (SDL_GetWindowWMInfo(Window, &info))
+	{
+		icon.uCallbackMessage = winmsg;
+		icon.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
+		icon.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+		icon.cbSize = sizeof(icon);
+		icon.hWnd = info.info.win.window;
+		lstrcpyW(icon.szTip, L"Test tip");
 
-        bool success = Shell_NotifyIcon(NIM_ADD, &icon);
-    }
+		if(bAdd)
+			bool success = Shell_NotifyIcon(NIM_ADD, &icon);
+		else
+			bool success = Shell_NotifyIcon(NIM_DELETE, &icon);
+	}
 }
 
 // Main code
@@ -45,6 +44,8 @@ int main(int, char**)
     {
         return -1;
     }
+
+	SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
 
     // GL 3.0 + GLSL 130
     const char* glsl_version = "#version 330";
@@ -62,19 +63,6 @@ int main(int, char**)
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
-
-    SDL_SetWindowsMessageHook([](void* userdata, void* hWnd, unsigned int message, Uint64 wParam, Sint64 lParam) {
-        if (message == winmsg)
-        {
-			
-            if (lParam == WM_LBUTTONDBLCLK)
-            {
-				SDL_ShowWindow((SDL_Window*)userdata);
-            }
-        }
-    }, window);
-
-    MakeTaskbarIcon(window);
 
     bool err = gladLoadGL() == 0;
     if (err)
@@ -133,14 +121,28 @@ int main(int, char**)
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
+			if (event.type == SDL_SYSWMEVENT)
+			{
+				if (event.syswm.msg->msg.win.msg == winmsg)
+				{
+					if (LOWORD(event.syswm.msg->msg.win.lParam) == WM_LBUTTONDBLCLK)
+					{
+						TrayIcon(window, false);
+						SDL_ShowWindow(window);
+						WindowVisible = true;
+					}
+				}
+			}
             if (event.type == SDL_QUIT)
             {
+				TrayIcon(window, true);
                 //done = true;
                 SDL_HideWindow(window);
                 WindowVisible = false;
             }
             if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
             {
+				TrayIcon(window, true);
                 //done = true;
                 SDL_HideWindow(window);
                 WindowVisible = false;
