@@ -8,16 +8,27 @@
 
 #include "Script.h"
 
-static std::string LogBuffer = "shish";
+//static std::string LogBuffer = "> shish\n";
 static std::string InputBuffer = "";
 
 static std::vector<Script> Scripts;
+
+static std::vector<std::string> LuaLog = { "> shish" };
 
 void Setup()
 {
 	Scripts.push_back(Script("Scrape Site"));
 	Scripts.push_back(Script("Mass-Rename Files"));
 	Scripts.push_back(Script("Empty Recycle Bin"));
+}
+
+bool LuaLogScrollToBottom = false;
+void ExecLine()
+{
+	// Replace with real Lua interfacing later
+	LuaLog.push_back("> " + InputBuffer);
+	InputBuffer.clear();
+	LuaLogScrollToBottom = true;
 }
 
 void MainUI()
@@ -58,12 +69,27 @@ void MainUI()
 				ImGui::BeginTabBar("LuaTermTabs");
 					if (ImGui::BeginTabItem(" * "))
 					{
-						ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-						ImGui::InputTextMultiline("LuaLog", &LogBuffer, ImVec2(0, -60), ImGuiInputTextFlags_None);
+						/*ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+						ImGui::InputTextMultiline("LuaLog", &LogBuffer, ImVec2(0, -60), ImGuiInputTextFlags_ReadOnly);
+						*/
+						
+						ImGui::BeginChild(ImGui::GetID("LuaLog"), ImVec2(ImGui::GetContentRegionAvail().x, -60), true);
+							for(auto &CurLine : LuaLog)
+							{
+								ImGui::TextWrapped(CurLine.c_str());
+							}
+
+							if (LuaLogScrollToBottom == true)
+							{
+								ImGui::SetScrollHereY();
+								LuaLogScrollToBottom = false;
+							}
+						ImGui::EndChild();
 
 						if (ImGui::Button("Clear Log"))
 						{
-
+							//LogBuffer.clear();
+							LuaLog.clear();
 						}
 
 						ImGui::Spacing();
@@ -74,7 +100,11 @@ void MainUI()
 						//ImGui::InvisibleButton("aa", { ImGui::GetContentRegionAvail().x - 30, 0 });
 
 						ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-						ImGui::InputText("LuaInput", &InputBuffer);
+						if (ImGui::InputText("LuaInput", &InputBuffer, ImGuiInputTextFlags_EnterReturnsTrue))
+						{
+							ExecLine();
+							ImGui::SetKeyboardFocusHere(-1);
+						}
 						ImGui::EndTabItem();
 					}
 				ImGui::EndTabBar();
@@ -192,11 +222,22 @@ void MainUI()
 
 				if (ImGui::BeginTabItem("Cron"))
 				{
+					ImGui::BeginChild(ImGui::GetID("CronEntries"), ImVec2(0, 0), true);
+						if (ImGui::BeginPopupContextWindow("ToolbarMenu"))
+						{
+							if (ImGui::MenuItem("New Cron Task"))
+							{
+
+							}
+							ImGui::EndPopup();
+						}
+					ImGui::EndChild();
+
 					ImGui::EndTabItem();
 				}
 				ImGui::EndTabBar();
 			}
-			else
+			
 			{
 				//ImGui::PopStyleVar(1);
 			}
