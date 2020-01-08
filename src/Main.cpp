@@ -15,6 +15,8 @@
 
 #include <Sol2/sol.hpp>
 
+#include "LuaTask.h"
+
 #define winmsg (WM_USER + 1)
 void TrayIcon(SDL_Window *Window, bool bAdd)
 {
@@ -41,6 +43,8 @@ void TrayIcon(SDL_Window *Window, bool bAdd)
 // Main code
 int main(int, char**)
 {
+    LuaTask* x = new LuaTask("C:\\Users\\Benjamin\\source\\repos\\Psittaciform\\bin\\Debug-x86\\test");
+
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
     // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
