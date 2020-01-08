@@ -1,3 +1,5 @@
+#include <luajit.h>
+
 #include <SDL.h>
 #include <SDL_syswm.h>
 
@@ -10,6 +12,8 @@
 #include "ImGui/imgui_impl_sdl.h"
 
 #include "MainUI.h"
+
+#include <Sol2/sol.hpp>
 
 #define winmsg (WM_USER + 1)
 void TrayIcon(SDL_Window *Window, bool bAdd)

@@ -2,6 +2,7 @@ print("Making dirs")
 -- Create /ext directories
 os.mkdir("./ext")
 os.mkdir("./ext/SDL2")
+os.mkdir("./ext/LuaJIT")
 -- Create /license directory
 os.mkdir("./license")
 
@@ -44,7 +45,49 @@ end
 if(not os.isfile(_OPTIONS["sdl2_license"])) then 
 	premake.error("[ERROR] SDL2 license file '" .. _OPTIONS["sdl2_license"] .. " does not exist or is not a file.") 
 else
-	os.copyfile(_OPTIONS["sdl2_license"], "./license/README-SDL.txt")
+	os.copyfile(_OPTIONS["sdl2_license"], "./license/LICENSE-SDL2.txt")
+end
+
+-- LuaJIT paths
+newoption {
+	trigger =		"luajit",
+	description =	"LuaJIT directory containing /include, /lib, and /README-SDL.txt",
+	default =		"./ext/luajit"
+}
+newoption {
+	trigger =		"luajit_include",
+	description =	"LuaJIT directory containing header files."
+}
+newoption {
+	trigger =		"luajit_lib",
+	description =	"LuaJIT directory containing .lib and .dll files."
+}
+newoption {
+	trigger =		"luajit_license",
+	description =	"LuaJIT directory containing COPYRIGHT"
+}
+
+if(not _OPTIONS["luajit_include"]) then
+	_OPTIONS["luajit_include"] = _OPTIONS["luajit"] .. "/include"
+end
+if(not os.isdir(_OPTIONS["luajit_include"])) then 
+	premake.error("[ERROR] LuaJIT include directory '" .. _OPTIONS["luajit_include"] .. " does not exist or is not a directory.") 
+end
+
+if(not _OPTIONS["luajit_lib"]) then
+	_OPTIONS["luajit_lib"] = _OPTIONS["luajit"] .. "/lib"
+end
+if(not os.isdir(_OPTIONS["luajit_lib"])) then 
+	premake.error("[ERROR] LuaJIT lib directory '" .. _OPTIONS["luajit_lib"] .. " does not exist or is not a directory.") 
+end
+
+if(not _OPTIONS["luajit_license"]) then
+	_OPTIONS["luajit_license"] = _OPTIONS["luajit"] .. "/COPYRIGHT"
+end
+if(not os.isfile(_OPTIONS["luajit_license"])) then 
+	premake.error("[ERROR] LuaJIT license file '" .. _OPTIONS["luajit_license"] .. " does not exist or is not a file.") 
+else
+	os.copyfile(_OPTIONS["luajit_license"], "./license/LICENSE-LuaJIT.txt")
 end
 
 workspace "Psittaciform"
@@ -63,6 +106,7 @@ workspace "Psittaciform"
 project "Psittaciform"
 	kind "WindowedApp"
 	language "C++"
+	cppdialect "C++17"
 	objdir "./obj/%{cfg.buildcfg}-%{cfg.architecture}"
 	targetdir "./bin/%{cfg.buildcfg}-%{cfg.architecture}"	-- "/bin/Debug-x86", "/bin/Release-x86_64", etc.
 	entrypoint "WinMainCRTStartup"
@@ -79,10 +123,12 @@ project "Psittaciform"
 		"./deps/**.c",
 		"./deps/**.cpp",
 		"./deps/**.h",
-
-		"./include/**.h",
+		"./deps/**.hpp",
+		
 		"./src/**.c",
 		"./src/**.cpp",
+		"./include/**.h",
+		"./include/**.hpp",
 	}
 
 	-- Includes
@@ -93,6 +139,7 @@ project "Psittaciform"
 	
 	sysincludedirs {	-- For external dependencies (<> includes)
 		_OPTIONS["sdl2_include"],
+		_OPTIONS["luajit_include"],
 	}
 	
 	filter "system:windows"
@@ -103,6 +150,15 @@ project "Psittaciform"
 		}
 	
 	-- Libraries and linking
+	syslibdirs {
+		_OPTIONS["luajit_lib"]
+	}
+	links {
+		"luajit",
+		"lua51"
+	}
+	
+	-- Platform filters
 	filter "platforms:x86"	
 		syslibdirs {
 			_OPTIONS["sdl2_lib"] .. "/x86",
@@ -112,6 +168,7 @@ project "Psittaciform"
 			"SDL2main"
 		}
 
+	-- Configuration filters
 	filter "configurations:Debug"
 		runtime "Debug"		-- Multithreaded Debug
 		symbols "On"		-- Debugging symbols on
