@@ -2,9 +2,10 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <string>
 
-#include <Sol2/forward.hpp>
+#include <Sol2/sol.hpp>
 
 class LuaTask
 {
@@ -98,8 +99,9 @@ public:
 	};
 
 private:
-	sol::state *_State;		// The Lua state that the task operates on.
-	sol::environment *_Sandbox;
+	sol::state _State;		// The Lua state that the task operates on.
+	sol::environment _Sandbox;
+	sol::safe_function Func;
 	
 	// Returns -1 if permissions are denied or the path doesn't exist (FOR NOW!!!)
 	uint8_t _ReadConfig(const std::filesystem::path& RootPath);

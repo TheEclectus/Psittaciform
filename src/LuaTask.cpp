@@ -1,7 +1,5 @@
 #include "LuaTask.h"
 
-#include <Sol2/sol.hpp>
-
 #define hasflag(var, enm) ((var & static_cast<uint8_t>(enm)) == static_cast<uint8_t>(enm))
 
 uint8_t LuaTask::_ReadConfig(const std::filesystem::path& RootPath)
@@ -11,7 +9,7 @@ uint8_t LuaTask::_ReadConfig(const std::filesystem::path& RootPath)
 		return false;
 
 	// Human-readable text only
-	sol::protected_function_result ConfigRes = _State->do_file(ConfigPath.string(), sol::load_mode::text);
+	sol::protected_function_result ConfigRes = _State.do_file(ConfigPath.string(), sol::load_mode::text);
 	if (!ConfigRes.valid())
 		return 0-1;
 
@@ -41,18 +39,17 @@ uint8_t LuaTask::_ReadConfig(const std::filesystem::path& RootPath)
 
 void LuaTask::_SetupState(uint8_t Perms)
 {
-	if (_Sandbox)
-		delete _Sandbox;
+	sol::state* State = &_State;
+	//_Sandbox = new sol::environment(_State);
+	sol::environment& Env = _Sandbox;
 
-	sol::state* State = _State;
-	_Sandbox = new sol::environment(*_State);
-	sol::environment& Env = *_Sandbox;
+	Env = _State.globals();
 
 	// MODIFIED LUA LIBRARY DEFINITIONS
 	Env["dofile"]	= sol::nil;
 	Env["load"]		= sol::nil;
 	Env["loadfile"] = sol::nil;
-	Env["print"]	= _State->globals()["print"]; // Will eventually print to imgui console
+	Env["print"]	= _State.globals()["print"]; // Will eventually print to imgui console
 
 	Env["package.cpath"]	= "";
 	Env["package.loadlib"]	= sol::nil;
@@ -61,7 +58,8 @@ void LuaTask::_SetupState(uint8_t Perms)
 
 	Env["io.close"]		= sol::nil;
 	Env["io.input"]		= [State](const std::string& Path) {
-		State->globals()["io.input"](Path);
+		sol::safe_function IO_Input = State->globals()["io.input"];
+		return IO_Input(Path);
 	};
 	Env["io.lines"]		= sol::nil;
 	Env["io.open"]		= sol::nil;
@@ -76,30 +74,67 @@ void LuaTask::_SetupState(uint8_t Perms)
 	};
 
 	// BITS +0-2 -- FILE PERMISSIONS
-	if (Perms & static_cast<uint8_t>(Perms::FileIO_Read))
+
+	if (hasflag(Perms, Perms::FileIO_Read))
 	{
+		Env["io.open"]		= [State, Perms](const std::string& Filename, sol::object Mode) {
+			std::filesystem::path OpenPath = std::filesystem::absolute(Filename);
+			/*if (!hasflag(Perms, Perms::FileIO_ExternalFiles))
+			{
+				if (OpenPath.string().find(std::filesystem::current_path().string()) != 0)
+				{
+					luaL_error("Insufficient permissions to call io.open on any file outside the task's working directory.")
+				}
+			}
+
+			static std::string PrependText = (hasflag(Perms, Perms::FileIO_ExternalFiles) ?)*/
+		};
+
+
+		if (hasflag(Perms, Perms::FileIO_ReadWrite))
+		{
+			//Func()
+		}
+		else
+		{
+			// "Open" only works when Mode == "r"
+			Env["io.open"] = [State](const std::string& Filename, sol::object Mode) {
+				if (Mode.valid() && Mode.is<std::string>())
+				{
+					if (Mode.as<std::string>() != "r")
+					{
+						luaL_error(*State, "Insufficient permissions to call io.open called with any argument except 'r'.");
+						return;
+					}
+
+					State->globals()["io.open"](Filename, "r");
+				}
+				else
+				{
+					State->globals()["io.open"](Filename);
+				}
+			};
+		}
+
 		if (hasflag(Perms, Perms::FileIO_ExternalFiles) && hasflag(Perms, Perms::FileIO_ReadWrite))
 		{
 			// External file RW perms
-			Env["io.open"]		= _State->globals()["io.open"];
-			Env["package.path"] = _State->globals()["package.path"];
+			Env["io.open"]		= _State.globals()["io.open"];
+			Env["package.path"] = _State.globals()["package.path"];
 		}
-		else if ()
+		else //if ()
 		{
 
 		}
 
-		if (Perms & static_cast<uint8_t>(Perms::FileIO_ReadWrite))
-		{
-
-		}
+		
 	}
 	
 }
 
 LuaTask::LuaTask(const std::filesystem::path& RootPath) :
-	_State(new sol::state()),
-	_Sandbox(nullptr)
+	_State(),
+	_Sandbox()
 {
 	uint8_t RequestedPerms = _ReadConfig(RootPath);
 

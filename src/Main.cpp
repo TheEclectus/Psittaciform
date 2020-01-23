@@ -15,7 +15,9 @@
 
 #include <Sol2/sol.hpp>
 
-#include "LuaTask.h"
+//#include "LuaTask.h"
+
+#include "ImGui_Layout.h"
 
 #define winmsg (WM_USER + 1)
 void TrayIcon(SDL_Window *Window, bool bAdd)
@@ -43,7 +45,7 @@ void TrayIcon(SDL_Window *Window, bool bAdd)
 // Main code
 int main(int, char**)
 {
-    LuaTask* x = new LuaTask("C:\\Users\\Benjamin\\source\\repos\\Psittaciform\\bin\\Debug-x86\\test");
+    //LuaTask* x = new LuaTask("C:\\Users\\Benjamin\\source\\repos\\Psittaciform\\bin\\Debug-x86\\test");
 
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
@@ -115,9 +117,14 @@ int main(int, char**)
 
     Setup();
 
+    char Buf[1024];
+    memset(Buf, 0, sizeof(Buf));
+
     // Main loop
+    bool FirstLoop = false;
     bool WindowVisible = true;
     bool done = false;
+   
     while (!done)
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -155,6 +162,21 @@ int main(int, char**)
                 SDL_HideWindow(window);
                 WindowVisible = false;
             }
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED && event.window.windowID == SDL_GetWindowID(window))
+            {
+                float SizeX = static_cast<float>(event.window.data1);
+                float SizeY = static_cast<float>(event.window.data2);
+
+                ImVec2 MinSize = ImGui_Layout::MinimumDisplaySize();
+                bool bResizeX = (SizeX < MinSize.x), bResizeY = (SizeY < MinSize.y);
+                if (bResizeX || bResizeY)
+                {
+                    SDL_SetWindowSize(window,
+                        (bResizeX ? static_cast<int>(MinSize.x) : static_cast<int>(SizeX)),
+                        (bResizeY ? static_cast<int>(MinSize.y) : static_cast<int>(SizeY))
+                    );
+                }
+            }
         }
 
         if (WindowVisible)
@@ -163,6 +185,8 @@ int main(int, char**)
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplSDL2_NewFrame(window);
             ImGui::NewFrame();
+
+            ImGui_Layout::BeginLayout();
 
             ImGui::ShowDemoWindow();
 
@@ -205,7 +229,22 @@ int main(int, char**)
             }
             */
 
-            MainUI();
+            //MainUI();
+
+            ImGui_Layout::NextWindowWidth(300);
+            ImGui_Layout::BeginAnchorWindow("Stats", { 0.f, 0.f }, { 0.0f, 1.f });
+                // ...
+                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                ImGui::InputTextWithHint("", "hint", Buf, sizeof(Buf));
+            ImGui_Layout::EndAnchorWindow();
+            
+            ImGui_Layout::NextWindowHorizontalAlign();
+
+            ImGui_Layout::NextWindowWidthBounds(-1, 450);
+            ImGui_Layout::BeginAnchorWindow("Preview", { 0.f, 0.f }, { 1.f, 1.f });
+                // ...
+            ImGui_Layout::EndAnchorWindow();
+
             // Rendering
             ImGui::Render();
             glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
