@@ -48,5 +48,13 @@ namespace ImGui_Layout
 
 namespace ImGui_Props
 {
-	
+	void BeginPropertyGrid(const char* ID = nullptr, bool bSizeable = false, bool bHasDividers = false);
+	void EndPropertyGrid();
+
+	/*
+		String entry
+	*/
+	template<size_t Len>
+	void PropertyGridInlineEntry(char (&n)[Len]);
+	void PropertyGridInlineEntry(char* Buffer, size_t BufLen);
 }

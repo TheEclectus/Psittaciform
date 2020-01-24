@@ -231,11 +231,47 @@ int main(int, char**)
 
             //MainUI();
 
+            char b[12];
+            ImGui_Props::PropertyGridInlineEntry(b);
+
             ImGui_Layout::NextWindowWidth(300);
             ImGui_Layout::BeginAnchorWindow("Stats", { 0.f, 0.f }, { 0.0f, 1.f });
+            {
                 // ...
+                //ImGui::LabelText("Label", "fmt");
+
+                //float AvailWidth = ImGui::GetContentRegionAvail().x;
+
+                //ImGui::SetNextItemWidth(AvailWidth / 2);
+
+                // Set up columns
+                ImGui::Columns(2, nullptr, false);
+                ImGui::SetColumnWidth(0, 100.f);
+
+                ImGui::PushID("namebar");
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Name");
+                ImGui::NextColumn();
+
                 ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
                 ImGui::InputTextWithHint("", "hint", Buf, sizeof(Buf));
+                ImGui::NextColumn();
+                ImGui::PopID();
+                ImGui::Separator();
+                
+                ImGui::PushID("typebar");
+                ImGui::AlignTextToFramePadding();
+                ImGui::Text("Type");
+                ImGui::NextColumn();
+
+                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                const char* Types[] = { "Pistol", "Basic", "Heavy" };
+                static int CurTypeIndex = 0;
+                ImGui::Combo("", &CurTypeIndex, Types, IM_ARRAYSIZE(Types));
+                ImGui::PopID();
+
+                ImGui::Columns();
+            }
             ImGui_Layout::EndAnchorWindow();
             
             ImGui_Layout::NextWindowHorizontalAlign();

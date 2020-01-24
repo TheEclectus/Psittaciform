@@ -238,3 +238,42 @@ namespace ImGui_Layout
 		return LayoutMinSize;
 	}
 }
+
+namespace ImGui_Props
+{
+	bool bPropertyGrid = false;
+
+	void BeginPropertyGrid(const char *ID, bool bSizeable, bool bHasDividers)
+	{
+		IM_ASSERT(bPropertyGrid == false && "Property grid already being constructed!");
+		
+		float AvailW = ImGui::GetContentRegionAvail().x;
+
+		ImGui::Columns(2, ID, bSizeable);
+		ImGui::SetColumnWidth(0, AvailW * 0.3f);
+		bPropertyGrid = true;
+	}
+
+	void EndPropertyGrid()
+	{
+		ImGui::Columns();
+		bPropertyGrid = false;
+	}
+
+	template<class T, size_t Spare>
+	void PropertyGridInlineEntry(T Var)
+	{
+		IM_ASSERT(false && "Invalid type for inline edit field.");
+	}
+
+	template<size_t Len>
+	void PropertyGridInlineEntry(char(&)b[Len])
+	{
+		int i = 2;
+	}
+
+	void PropertyGridInlineEntry(char* Buffer, size_t BufLen)
+	{
+
+	}
+}
