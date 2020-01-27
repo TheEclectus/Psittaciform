@@ -52,9 +52,22 @@ namespace ImGui_Props
 	void EndPropertyGrid();
 
 	/*
-		String entry
+		Collapsing Region
+	*/
+	bool CollapsingRegion(const std::string& Label);
+
+	/*
+		Text Input (by default, returns true when the value has changed)
 	*/
 	template<size_t Len>
-	void PropertyGridInlineEntry(char (&n)[Len]);
-	void PropertyGridInlineEntry(char* Buffer, size_t BufLen);
+	bool PropertyGridTextInput(const std::string &Label, char(&n)[Len], ImGuiInputTextFlags Flags = 0, ImGuiInputTextCallback Callback = nullptr, void *UserData = nullptr)
+	{
+		return PropertyGridTextInput(Label, n, Len, Flags, Callback, UserData);
+	}
+	bool PropertyGridTextInput(const std::string& Label, char* Buffer, size_t BufLen, ImGuiInputTextFlags Flags = 0, ImGuiInputTextCallback Callback = nullptr, void* UserData = nullptr);
+
+	/*
+		Combo Box
+	*/
+	bool PropertyGridCombo(const std::string& Label, int* CurrentItem, const char* const Items[], size_t ItemCount);
 }

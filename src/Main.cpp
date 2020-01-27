@@ -231,9 +231,6 @@ int main(int, char**)
 
             //MainUI();
 
-            char b[12];
-            ImGui_Props::PropertyGridInlineEntry(b);
-
             ImGui_Layout::NextWindowWidth(300);
             ImGui_Layout::BeginAnchorWindow("Stats", { 0.f, 0.f }, { 0.0f, 1.f });
             {
@@ -245,7 +242,7 @@ int main(int, char**)
                 //ImGui::SetNextItemWidth(AvailWidth / 2);
 
                 // Set up columns
-                ImGui::Columns(2, nullptr, false);
+                /*ImGui::Columns(2, nullptr, false);
                 ImGui::SetColumnWidth(0, 100.f);
 
                 ImGui::PushID("namebar");
@@ -258,8 +255,9 @@ int main(int, char**)
                 ImGui::NextColumn();
                 ImGui::PopID();
                 ImGui::Separator();
+                */
                 
-                ImGui::PushID("typebar");
+                /*ImGui::PushID("typebar");
                 ImGui::AlignTextToFramePadding();
                 ImGui::Text("Type");
                 ImGui::NextColumn();
@@ -270,7 +268,16 @@ int main(int, char**)
                 ImGui::Combo("", &CurTypeIndex, Types, IM_ARRAYSIZE(Types));
                 ImGui::PopID();
 
-                ImGui::Columns();
+                ImGui::Columns();*/
+
+                ImGui_Props::BeginPropertyGrid("TestGrid", false, true);
+
+                ImGui_Props::PropertyGridTextInput("Name", Buf);
+                static int CurItem = 0;
+                const char* Types[] = { "Pistol", "Basic", "Heavy" };
+                ImGui_Props::PropertyGridCombo("Type", &CurItem, Types, IM_ARRAYSIZE(Types));
+
+                ImGui_Props::EndPropertyGrid();
             }
             ImGui_Layout::EndAnchorWindow();
             

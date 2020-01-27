@@ -242,6 +242,28 @@ namespace ImGui_Layout
 namespace ImGui_Props
 {
 	bool bPropertyGrid = false;
+	bool bHasHorizontalDividers = false;
+	size_t GridItemIndex = 0u;
+
+	void GridItemBegin(const std::string &Label)
+	{
+		IM_ASSERT(bPropertyGrid && "PropertyGridInline* functions must be called between BeginPropertyGrid() and EndPropertyGrid().");
+		ImGui::PushID(GridItemIndex);
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text(Label.c_str());
+		ImGui::NextColumn();
+	}
+
+	void GridItemEnd()
+	{
+		ImGui::NextColumn();
+		ImGui::PopID();
+		GridItemIndex++;
+
+		if (bHasHorizontalDividers)
+			ImGui::Separator();
+	}
 
 	void BeginPropertyGrid(const char *ID, bool bSizeable, bool bHasDividers)
 	{
@@ -251,29 +273,50 @@ namespace ImGui_Props
 
 		ImGui::Columns(2, ID, bSizeable);
 		ImGui::SetColumnWidth(0, AvailW * 0.3f);
+
 		bPropertyGrid = true;
+		bHasHorizontalDividers = bHasDividers;
+		ImGui::PushID(ID);
+		GridItemIndex = 0u;
 	}
 
 	void EndPropertyGrid()
 	{
 		ImGui::Columns();
 		bPropertyGrid = false;
+		ImGui::PopID();
 	}
 
-	template<class T, size_t Spare>
+	/*template<class T, size_t Spare>
 	void PropertyGridInlineEntry(T Var)
 	{
 		IM_ASSERT(false && "Invalid type for inline edit field.");
+	}*/
+
+	bool CollapsingRegion(const std::string& Label)
+	{
+		ImGui::CollapsingHeader(Label.c_str());
 	}
 
-	template<size_t Len>
-	void PropertyGridInlineEntry(char(&)b[Len])
+	bool PropertyGridTextInput(const std::string& Label, char* Buffer, size_t BufLen, ImGuiInputTextFlags Flags, ImGuiInputTextCallback Callback, void* UserData)
 	{
-		int i = 2;
+		GridItemBegin(Label);
+
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		bool ToReturn = ImGui::InputText("", Buffer, BufLen, Flags, Callback, UserData);
+
+		GridItemEnd();
+		return ToReturn;
 	}
 
-	void PropertyGridInlineEntry(char* Buffer, size_t BufLen)
+	bool PropertyGridCombo(const std::string& Label, int* CurrentItem, const char* const Items[], size_t ItemCount)
 	{
+		GridItemBegin(Label);
 
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		bool ToReturn = ImGui::Combo("", CurrentItem, Items, ItemCount);
+
+		GridItemEnd();
+		return ToReturn;
 	}
 }
