@@ -48,13 +48,17 @@ namespace ImGui_Layout
 
 namespace ImGui_Props
 {
+	void GridItemBegin(const std::string& Label);
+	void GridItemEnd();
+
 	void BeginPropertyGrid(const char* ID = nullptr, bool bSizeable = false, bool bHasDividers = false);
 	void EndPropertyGrid();
 
 	/*
 		Collapsing Region
 	*/
-	bool CollapsingRegion(const std::string& Label);
+	bool BeginCollapsingRegion(const std::string& Label);
+	void EndCollapsingRegion();
 
 	/*
 		Text Input (by default, returns true when the value has changed)
@@ -65,6 +69,12 @@ namespace ImGui_Props
 		return PropertyGridTextInput(Label, n, Len, Flags, Callback, UserData);
 	}
 	bool PropertyGridTextInput(const std::string& Label, char* Buffer, size_t BufLen, ImGuiInputTextFlags Flags = 0, ImGuiInputTextCallback Callback = nullptr, void* UserData = nullptr);
+
+	/*
+		Number Input
+	*/
+	bool PropertyGridIntInput(const std::string& Label, int& Value, const int Min = (std::numeric_limits<int>::min)(), const int Max = (std::numeric_limits<int>::max)(), const char *Prefix = nullptr, const char *Postfix = nullptr);
+	bool PropertyGridFloatInput(const std::string& Label, float& Value, bool *bShowDecimalPlaces = nullptr, uint8_t *DecimalPlaces = nullptr, const float Min = (std::numeric_limits<float>::min)(), const float Max = (std::numeric_limits<float>::max)(), const char *Prefix = nullptr, const char *Postfix = nullptr);
 
 	/*
 		Combo Box

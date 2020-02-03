@@ -1,5 +1,7 @@
 #include "ImGui_Layout.h"
 
+#include <ImGui/imgui_internal.h>
+
 // Is a MonoWindow being constructed?
 bool bMonoWindow = false;
 
@@ -243,7 +245,22 @@ namespace ImGui_Props
 {
 	bool bPropertyGrid = false;
 	bool bHasHorizontalDividers = false;
+	bool bGridSizeable = false;
+	const char* GridID = nullptr;
+
 	size_t GridItemIndex = 0u;
+
+	void SetupColumns()
+	{
+		float Indent = ImGui::GetCurrentWindow()->DC.Indent.x;
+		float AvailW = ImGui::GetContentRegionAvail().x;
+
+		float IndentedAvailW = AvailW - Indent;
+
+		ImGui::Columns(2, GridID, bGridSizeable);
+		//ImGui::SetColumnOffset(0, Indent);
+		ImGui::SetColumnWidth(0, (AvailW * 0.5f) + (Indent * 0.5f));
+	}
 
 	void GridItemBegin(const std::string &Label)
 	{
@@ -265,17 +282,17 @@ namespace ImGui_Props
 			ImGui::Separator();
 	}
 
-	void BeginPropertyGrid(const char *ID, bool bSizeable, bool bHasDividers)
+	void BeginPropertyGrid(const char* ID, bool bSizeable, bool bHasDividers)
 	{
 		IM_ASSERT(bPropertyGrid == false && "Property grid already being constructed!");
-		
-		float AvailW = ImGui::GetContentRegionAvail().x;
-
-		ImGui::Columns(2, ID, bSizeable);
-		ImGui::SetColumnWidth(0, AvailW * 0.3f);
 
 		bPropertyGrid = true;
+		GridID = ID;
 		bHasHorizontalDividers = bHasDividers;
+		bGridSizeable = bSizeable;
+
+		SetupColumns();
+
 		ImGui::PushID(ID);
 		GridItemIndex = 0u;
 	}
@@ -283,7 +300,12 @@ namespace ImGui_Props
 	void EndPropertyGrid()
 	{
 		ImGui::Columns();
+
 		bPropertyGrid = false;
+		GridID = nullptr;
+		bHasHorizontalDividers = false;
+		bGridSizeable = false;
+
 		ImGui::PopID();
 	}
 
@@ -293,9 +315,30 @@ namespace ImGui_Props
 		IM_ASSERT(false && "Invalid type for inline edit field.");
 	}*/
 
-	bool CollapsingRegion(const std::string& Label)
+	bool BeginCollapsingRegion(const std::string& Label)
 	{
-		ImGui::CollapsingHeader(Label.c_str());
+		ImGui::Columns();
+		bool ToReturn = ImGui::CollapsingHeader(Label.c_str(), ImGuiTreeNodeFlags_OpenOnArrow);
+
+		if (bHasHorizontalDividers)
+			ImGui::Separator();
+
+		ImGui::Indent();
+
+		SetupColumns();
+
+		return ToReturn;
+	}
+
+	void EndCollapsingRegion()
+	{
+		ImGui::Unindent();
+
+		// Programmers hate this one neat trick to get the columns to format correctly again!
+		ImGui::Columns();
+		SetupColumns();
+
+		//ImGui::TreePop();
 	}
 
 	bool PropertyGridTextInput(const std::string& Label, char* Buffer, size_t BufLen, ImGuiInputTextFlags Flags, ImGuiInputTextCallback Callback, void* UserData)
@@ -304,6 +347,102 @@ namespace ImGui_Props
 
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 		bool ToReturn = ImGui::InputText("", Buffer, BufLen, Flags, Callback, UserData);
+
+		GridItemEnd();
+		return ToReturn;
+	}
+
+	bool PropertyGridIntInput(const std::string& Label, int& Value, const int Min, const int Max, const char* Prefix, const char* Postfix)
+	{
+		IM_ASSERT(Min < Max && "PropertyGridIntInput(): Min param must be < Max param.");
+
+		GridItemBegin(Label);
+
+		if (Value < Min)
+			Value = Min;
+		if (Value > Max)
+			Value = Max;
+
+		std::string FmtString = "%d";
+		if (Prefix)		FmtString = Prefix + FmtString;
+		if (Postfix)	FmtString += Postfix;
+
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		bool ToReturn = ImGui::InputScalar("", ImGuiDataType_S32, &Value, nullptr, nullptr, FmtString.c_str());
+
+		GridItemEnd();
+		return ToReturn;
+	}
+
+	bool PropertyGridFloatInput(const std::string& Label, float& Value, bool* bShowDecimalPlaces, uint8_t* DecimalPlaces, const float Min, const float Max, const char* Prefix, const char* Postfix)
+	{
+		IM_ASSERT(Min < Max && "PropertyGridFloatInput(): Min param must be < Max param.");
+
+		GridItemBegin(Label);
+
+		if (Value < Min)
+			Value = Min;
+		if (Value > Max)
+			Value = Max;
+
+		bool ToReturn = false;
+		if (!bShowDecimalPlaces)
+		{
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+
+			std::string FmtString = "%.2f";
+			if (Prefix)		FmtString = Prefix + FmtString;
+			if (Postfix)	FmtString += Postfix;
+			ToReturn = ImGui::InputScalar("", ImGuiDataType_Float, &Value, nullptr, nullptr, FmtString.c_str());
+		}
+		else
+		{
+			IM_ASSERT(bShowDecimalPlaces && DecimalPlaces);
+
+			if (*DecimalPlaces < 0)
+				*DecimalPlaces = 0;
+			if (*DecimalPlaces > 4)
+				*DecimalPlaces = 4;
+
+			//ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0.f, ImGui::GetStyle().ItemSpacing.y });
+
+			std::string FmtString = std::string("%.") + std::to_string(*DecimalPlaces) + "f";
+			if (Prefix)		FmtString = Prefix + FmtString;
+			if (Postfix)	FmtString += Postfix;
+
+			float AvailW = ImGui::GetContentRegionAvail().x;
+
+			float InputW = (*bShowDecimalPlaces ? (AvailW * 0.8f) : AvailW);
+			ImGui::SetNextItemWidth(InputW);
+
+			ToReturn = ImGui::InputScalar("", ImGuiDataType_Float, &Value, nullptr, nullptr, FmtString.c_str());
+			/*ImGui::SameLine();
+			if (ImGui::ArrowButton("showhidedecs", (*bShowDecimalPlaces ? ImGuiDir_Right : ImGuiDir_Left)))
+			{
+				*bShowDecimalPlaces = !*bShowDecimalPlaces;
+			}*/
+
+			if (*bShowDecimalPlaces)
+			{
+				static const int DragMin = 0, DragMax = 4;
+
+				float DecW = (AvailW * 0.2f) - ImGui::GetStyle().ItemSpacing.x;
+
+				ImGui::SameLine();
+				ImGui::PushID("DecimalPlaces");
+				ImGui::SetNextItemWidth(DecW);
+				ImGui::DragScalar("", ImGuiDataType_U8, DecimalPlaces, 0.1f, &DragMin, &DragMax);
+				//ImGui::InputScalar("", ImGuiDataType_U8, DecimalPlaces);
+				if (ImGui::IsItemHovered())
+				{
+					ImGui::SetTooltip("Decimal Places");
+				}
+				ImGui::PopID();
+			}
+			
+
+			//ImGui::PopStyleVar();
+		}
 
 		GridItemEnd();
 		return ToReturn;

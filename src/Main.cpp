@@ -120,6 +120,9 @@ int main(int, char**)
     char Buf[1024];
     memset(Buf, 0, sizeof(Buf));
 
+    char DmgBuf[128];
+    memset(DmgBuf, 0, sizeof(DmgBuf));
+
     // Main loop
     bool FirstLoop = false;
     bool WindowVisible = true;
@@ -231,51 +234,40 @@ int main(int, char**)
 
             //MainUI();
 
-            ImGui_Layout::NextWindowWidth(300);
+            /*
+            ImGui_Layout::NextWindowWidth(325);
             ImGui_Layout::BeginAnchorWindow("Stats", { 0.f, 0.f }, { 0.0f, 1.f });
             {
-                // ...
-                //ImGui::LabelText("Label", "fmt");
-
-                //float AvailWidth = ImGui::GetContentRegionAvail().x;
-
-                //ImGui::SetNextItemWidth(AvailWidth / 2);
-
-                // Set up columns
-                /*ImGui::Columns(2, nullptr, false);
-                ImGui::SetColumnWidth(0, 100.f);
-
-                ImGui::PushID("namebar");
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Name");
-                ImGui::NextColumn();
-
-                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-                ImGui::InputTextWithHint("", "hint", Buf, sizeof(Buf));
-                ImGui::NextColumn();
-                ImGui::PopID();
-                ImGui::Separator();
-                */
-                
-                /*ImGui::PushID("typebar");
-                ImGui::AlignTextToFramePadding();
-                ImGui::Text("Type");
-                ImGui::NextColumn();
-
-                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-                const char* Types[] = { "Pistol", "Basic", "Heavy" };
-                static int CurTypeIndex = 0;
-                ImGui::Combo("", &CurTypeIndex, Types, IM_ARRAYSIZE(Types));
-                ImGui::PopID();
-
-                ImGui::Columns();*/
-
                 ImGui_Props::BeginPropertyGrid("TestGrid", false, true);
 
                 ImGui_Props::PropertyGridTextInput("Name", Buf);
+
                 static int CurItem = 0;
                 const char* Types[] = { "Pistol", "Basic", "Heavy" };
-                ImGui_Props::PropertyGridCombo("Type", &CurItem, Types, IM_ARRAYSIZE(Types));
+                if (ImGui_Props::PropertyGridCombo("Type", &CurItem, Types, IM_ARRAYSIZE(Types)))
+                {
+                    bool b = true;
+                }
+
+                static int ClassItem = 8;
+                const char* Classes[] = { "Bolt", "Exotic", "Flame", "Las", "Launcher", "Low-Tech", "Melta", "Plasma", "Solid Projectile" };
+                ImGui_Props::PropertyGridCombo("Class", &ClassItem, Classes, IM_ARRAYSIZE(Classes));
+
+                static float Weight = 10.f;
+                static bool Show = true;
+                static uint8_t Places = 0;
+                ImGui_Props::PropertyGridFloatInput("Weight", Weight, &Show, &Places, 0.f, 1000.f, nullptr, "kg");
+
+                ImGui_Props::PropertyGridTextInput("Damage", DmgBuf);
+                
+                static char RoF[64] = "S/-/-";
+                ImGui_Props::PropertyGridTextInput("Rate of Fire", RoF);
+
+                if (ImGui_Props::BeginCollapsingRegion("Rate of Fire"))
+                {
+
+                }
+                ImGui_Props::EndCollapsingRegion();
 
                 ImGui_Props::EndPropertyGrid();
             }
@@ -287,6 +279,46 @@ int main(int, char**)
             ImGui_Layout::BeginAnchorWindow("Preview", { 0.f, 0.f }, { 1.f, 1.f });
                 // ...
             ImGui_Layout::EndAnchorWindow();
+            */
+
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
+            ImGui_Layout::BeginAnchorWindow("Sus", { 0.f, 0.f }, { 1.f, 1.f }, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar);
+                ImGui::BeginMenuBar();
+                    if (ImGui::BeginMenu("File"))
+                    {
+                        ImGui::EndMenu();
+                    }
+
+                    static const char* Systems[] = { "Dark Heresy 1e", "Dark Heresy 2e" };
+                    static size_t SelectedSystem = 1u;
+
+                    if (ImGui::BeginMenu("System"))
+                    {
+                        for (size_t i = 0; i < IM_ARRAYSIZE(Systems); i++)
+                        {
+                            if (ImGui::MenuItem(Systems[i], nullptr, SelectedSystem == i))
+                            {
+                                SelectedSystem = i;
+                            }
+                        }
+                        ImGui::EndMenu();
+                    }
+                ImGui::EndMenuBar();
+
+                ImGui::BeginTabBar("Tabs");
+                    if (ImGui::BeginTabItem("Quick Reference"))
+                    {
+                        ImGui::EndTabItem();
+                    }
+                    
+                    if (ImGui::BeginTabItem("Weapons"))
+                    {
+                        ImGui::EndTabItem();
+                    }
+                    
+                ImGui::EndTabBar();
+            ImGui_Layout::EndAnchorWindow();
+            ImGui::PopStyleVar();
 
             // Rendering
             ImGui::Render();
